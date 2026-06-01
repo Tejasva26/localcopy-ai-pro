@@ -21,6 +21,7 @@ import { CopyOutput } from "@/components/wizard/CopyOutput";
 import { PromptEngineeringPanel } from "@/components/wizard/PromptEngineeringPanel";
 import { generateCopy } from "@/lib/generate-copy.functions";
 import { emptyWizardData, type WizardData, type GeneratedCopy } from "@/lib/wizard-types";
+import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -81,21 +82,28 @@ function Home() {
     return () => clearTimeout(id);
   }, [data]);
 
-  const canAdvance = useMemo(() => {
+  const missingReason = useMemo((): string | null => {
     switch (step) {
-      case 0: return data.business.name.trim().length > 0 && data.business.category !== "";
-      case 1: return data.services.length === 0 || data.services.every((s) => s.name.trim().length > 0);
-      case 2: return true;
-      case 3: return data.tones.length > 0;
-      case 4: return data.sections.length > 0;
-      case 5: return true;
-      default: return true;
+      case 0: {
+        const missing: string[] = [];
+        if (data.business.name.trim().length === 0) missing.push("Business Name");
+        if (data.business.category === "") missing.push("Business Category");
+        return missing.length ? `Please add: ${missing.join(" & ")}` : null;
+      }
+      case 1:
+        return data.services.some((s) => s.name.trim().length === 0)
+          ? "Every service needs a name (or delete the empty ones)"
+          : null;
+      case 3: return data.tones.length === 0 ? "Pick at least one tone" : null;
+      case 4: return data.sections.length === 0 ? "Select at least one section to generate" : null;
+      default: return null;
     }
   }, [step, data]);
+  const canAdvance = missingReason === null;
 
   const next = () => {
     if (!canAdvance) {
-      toast.error("Please complete the required fields first.");
+      toast.error(missingReason ?? "Please complete the required fields.");
       return;
     }
     if (step === 5) {
@@ -207,17 +215,29 @@ function Home() {
           </AnimatePresence>
 
           {step < 6 && (
-            <div className="flex items-center justify-between pt-4 border-t border-border/40">
+            <div className="flex items-center justify-between gap-3 pt-4 border-t border-border/40">
               <Button variant="ghost" onClick={back} disabled={step === 0}>
                 <ArrowLeft className="h-4 w-4 mr-1" /> Back
               </Button>
-              <Button onClick={next} disabled={!canAdvance} className="bg-gradient-brand text-primary-foreground shadow-glow">
-                {step === 5 ? (
-                  <>Generate Copy <Sparkles className="h-4 w-4 ml-1" /></>
-                ) : (
-                  <>Continue <ArrowRight className="h-4 w-4 ml-1" /></>
+              <div className="flex items-center gap-3">
+                {missingReason && (
+                  <span className="hidden sm:inline text-xs text-amber-400/90">{missingReason}</span>
                 )}
-              </Button>
+                <Button
+                  onClick={next}
+                  aria-disabled={!canAdvance}
+                  className={cn(
+                    "bg-gradient-brand text-primary-foreground shadow-glow transition-opacity",
+                    !canAdvance && "opacity-60 hover:opacity-80",
+                  )}
+                >
+                  {step === 5 ? (
+                    <>Generate Copy <Sparkles className="h-4 w-4 ml-1" /></>
+                  ) : (
+                    <>Continue <ArrowRight className="h-4 w-4 ml-1" /></>
+                  )}
+                </Button>
+              </div>
             </div>
           )}
         </motion.div>
