@@ -214,17 +214,29 @@ function Home() {
           </AnimatePresence>
 
           {step < 6 && (
-            <div className="flex items-center justify-between pt-4 border-t border-border/40">
+            <div className="flex items-center justify-between gap-3 pt-4 border-t border-border/40">
               <Button variant="ghost" onClick={back} disabled={step === 0}>
                 <ArrowLeft className="h-4 w-4 mr-1" /> Back
               </Button>
-              <Button onClick={next} disabled={!canAdvance} className="bg-gradient-brand text-primary-foreground shadow-glow">
-                {step === 5 ? (
-                  <>Generate Copy <Sparkles className="h-4 w-4 ml-1" /></>
-                ) : (
-                  <>Continue <ArrowRight className="h-4 w-4 ml-1" /></>
+              <div className="flex items-center gap-3">
+                {missingReason && (
+                  <span className="hidden sm:inline text-xs text-amber-400/90">{missingReason}</span>
                 )}
-              </Button>
+                <Button
+                  onClick={next}
+                  aria-disabled={!canAdvance}
+                  className={cn(
+                    "bg-gradient-brand text-primary-foreground shadow-glow transition-opacity",
+                    !canAdvance && "opacity-60 hover:opacity-80",
+                  )}
+                >
+                  {step === 5 ? (
+                    <>Generate Copy <Sparkles className="h-4 w-4 ml-1" /></>
+                  ) : (
+                    <>Continue <ArrowRight className="h-4 w-4 ml-1" /></>
+                  )}
+                </Button>
+              </div>
             </div>
           )}
         </motion.div>
