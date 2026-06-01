@@ -155,28 +155,24 @@ function Home() {
       </header>
 
       <main className="max-w-6xl mx-auto px-4 sm:px-6 py-8 sm:py-12 space-y-8">
-        {/* Hero header — hide when viewing generated copy */}
-        {step < 6 && (
-          <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} className="text-center max-w-3xl mx-auto space-y-3">
-            <div className="inline-flex items-center gap-2 rounded-full glass px-3 py-1 text-xs">
-              <Sparkles className="h-3 w-3 text-primary" />
-              Powered by Lovable AI · Gemini Flash
-            </div>
-            <h1 className="text-3xl sm:text-5xl font-bold tracking-tight">
-              Beautiful website copy for your <span className="text-gradient">local business</span>
-            </h1>
-            <p className="text-muted-foreground">
-              Answer a few questions. Get a complete site — hero, about, services, FAQs, SEO — in seconds.
-            </p>
-          </motion.div>
-        )}
-
-        {/* Step indicator — hide when viewing generated copy */}
-        {step < 6 && (
-          <div className="glass-strong rounded-2xl p-5 sm:p-6">
-            <StepIndicator current={step} />
+        {/* Hero header */}
+        <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} className="text-center max-w-3xl mx-auto space-y-3">
+          <div className="inline-flex items-center gap-2 rounded-full glass px-3 py-1 text-xs">
+            <Sparkles className="h-3 w-3 text-primary" />
+            Powered by Lovable AI · Gemini Flash
           </div>
-        )}
+          <h1 className="text-3xl sm:text-5xl font-bold tracking-tight">
+            Beautiful website copy for your <span className="text-gradient">local business</span>
+          </h1>
+          <p className="text-muted-foreground">
+            Answer a few questions. Get a complete site — hero, about, services, FAQs, SEO — in seconds.
+          </p>
+        </motion.div>
+
+        {/* Step indicator */}
+        <div className="glass-strong rounded-2xl p-5 sm:p-6">
+          <StepIndicator current={step} />
+        </div>
 
         {/* Step card — hide shell when viewing generated copy */}
         {step < 6 ? (
