@@ -81,21 +81,28 @@ function Home() {
     return () => clearTimeout(id);
   }, [data]);
 
-  const canAdvance = useMemo(() => {
+  const missingReason = useMemo((): string | null => {
     switch (step) {
-      case 0: return data.business.name.trim().length > 0 && data.business.category !== "";
-      case 1: return data.services.length === 0 || data.services.every((s) => s.name.trim().length > 0);
-      case 2: return true;
-      case 3: return data.tones.length > 0;
-      case 4: return data.sections.length > 0;
-      case 5: return true;
-      default: return true;
+      case 0: {
+        const missing: string[] = [];
+        if (data.business.name.trim().length === 0) missing.push("Business Name");
+        if (data.business.category === "") missing.push("Business Category");
+        return missing.length ? `Please add: ${missing.join(" & ")}` : null;
+      }
+      case 1:
+        return data.services.some((s) => s.name.trim().length === 0)
+          ? "Every service needs a name (or delete the empty ones)"
+          : null;
+      case 3: return data.tones.length === 0 ? "Pick at least one tone" : null;
+      case 4: return data.sections.length === 0 ? "Select at least one section to generate" : null;
+      default: return null;
     }
   }, [step, data]);
+  const canAdvance = missingReason === null;
 
   const next = () => {
     if (!canAdvance) {
-      toast.error("Please complete the required fields first.");
+      toast.error(missingReason ?? "Please complete the required fields.");
       return;
     }
     if (step === 5) {
