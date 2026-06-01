@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { motion } from "motion/react";
-import { Copy, Download, RefreshCw, FileText, Check, Sparkles, Gauge, Search, BookOpen } from "lucide-react";
+import { Copy, Download, RefreshCw, FileText, Check, Sparkles, Gauge, Search, BookOpen, Type } from "lucide-react";
 import { toast } from "sonner";
 import type { GeneratedCopy } from "@/lib/wizard-types";
 import { Button } from "@/components/ui/button";
