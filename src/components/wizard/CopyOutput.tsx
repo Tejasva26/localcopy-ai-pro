@@ -121,10 +121,11 @@ export function CopyOutput({ copy, onRegenerate, regenerating, businessName }: P
 
   return (
     <div className="space-y-6">
-      <div className="grid sm:grid-cols-3 gap-3">
+      <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-3">
         <ScoreCard label="Content Quality" value={copy.scores.quality} icon={Sparkles} />
         <ScoreCard label="SEO Optimization" value={copy.scores.seo} icon={Search} />
         <ScoreCard label="Readability" value={copy.scores.readability} icon={BookOpen} />
+        <ScoreCard label="Word Count" value={countWords(copy)} icon={Type} suffix=" words" accent="text-primary" />
       </div>
 
       <div className="flex flex-wrap items-center justify-between gap-3">
