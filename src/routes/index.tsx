@@ -21,6 +21,7 @@ import { CopyOutput } from "@/components/wizard/CopyOutput";
 import { PromptEngineeringPanel } from "@/components/wizard/PromptEngineeringPanel";
 import { generateCopy } from "@/lib/generate-copy.functions";
 import { emptyWizardData, type WizardData, type GeneratedCopy } from "@/lib/wizard-types";
+import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/")({
   head: () => ({
