@@ -252,8 +252,8 @@ function Home() {
           </motion.div>
         )}
 
-        {/* Prompt engineering panel — hide when viewing generated copy */}
-        {step >= 5 && step < 6 && <PromptEngineeringPanel data={data} copy={copy} />}
+        {/* Prompt engineering panel — visible on review + output */}
+        {step >= 5 && <PromptEngineeringPanel data={data} copy={copy} />}
 
         <footer className="text-center text-xs text-muted-foreground pt-8 pb-4">
           Built with React · TanStack Start · Tailwind · AI SDK · Lovable AI Gateway
