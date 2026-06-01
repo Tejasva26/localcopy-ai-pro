@@ -14,8 +14,9 @@ interface Props {
   businessName: string;
 }
 
-function ScoreCard({ label, value, icon: Icon }: { label: string; value: number; icon: React.ComponentType<{ className?: string }> }) {
-  const color = value >= 85 ? "text-success" : value >= 70 ? "text-accent" : "text-muted-foreground";
+function ScoreCard({ label, value, icon: Icon, suffix = "/100", accent }: { label: string; value: number | string; icon: React.ComponentType<{ className?: string }>; suffix?: string; accent?: string }) {
+  const numeric = typeof value === "number" ? value : null;
+  const color = accent ?? (numeric === null ? "text-foreground" : numeric >= 85 ? "text-success" : numeric >= 70 ? "text-accent" : "text-muted-foreground");
   return (
     <div className="glass rounded-xl p-4 flex items-center gap-3">
       <div className="h-10 w-10 rounded-lg bg-gradient-brand/15 border border-primary/30 flex items-center justify-center">
@@ -23,10 +24,24 @@ function ScoreCard({ label, value, icon: Icon }: { label: string; value: number;
       </div>
       <div>
         <p className="text-xs text-muted-foreground">{label}</p>
-        <p className={cn("text-xl font-bold", color)}>{value}<span className="text-xs text-muted-foreground font-normal">/100</span></p>
+        <p className={cn("text-xl font-bold", color)}>{value}<span className="text-xs text-muted-foreground font-normal">{suffix}</span></p>
       </div>
     </div>
   );
+}
+
+function countWords(c: GeneratedCopy): number {
+  const text = [
+    c.hero.headline, c.hero.subheadline, c.hero.primaryCta, c.hero.secondaryCta,
+    c.about.overview, c.about.mission, ...c.about.trustSignals,
+    ...c.services.flatMap((s) => [s.name, s.description]),
+    ...c.whyChooseUs,
+    ...c.testimonials.flatMap((t) => [t.quote, t.name, t.role]),
+    ...c.faqs.flatMap((f) => [f.question, f.answer]),
+    c.contact, c.finalCta.headline, c.finalCta.button,
+    c.seo.metaTitle, c.seo.metaDescription, ...c.seo.keywords,
+  ].join(" ");
+  return text.trim().split(/\s+/).filter(Boolean).length;
 }
 
 function formatAsText(c: GeneratedCopy, name: string): string {
