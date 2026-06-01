@@ -75,19 +75,19 @@ const OutputSchema = z.object({
     trustSignals: z.array(z.string()).min(3).max(6),
   }),
   services: z.array(z.object({ name: z.string(), description: z.string() })).min(1).max(20),
-  whyChooseUs: z.array(z.string()).min(5).max(7),
+  whyChooseUs: z.array(z.string()).min(3).max(8),
   testimonials: z.array(z.object({
     name: z.string(),
     role: z.string(),
     quote: z.string(),
-  })).length(3),
-  faqs: z.array(z.object({ question: z.string(), answer: z.string() })).length(5),
+  })).min(2).max(6),
+  faqs: z.array(z.object({ question: z.string(), answer: z.string() })).min(3).max(8),
   contact: z.string(),
   finalCta: z.object({ headline: z.string(), button: z.string() }),
   seo: z.object({
     metaTitle: z.string(),
     metaDescription: z.string(),
-    keywords: z.array(z.string()).min(5).max(15),
+    keywords: z.array(z.string()).min(3).max(20),
   }),
   scores: z.object({
     quality: z.number().int().min(0).max(100),
