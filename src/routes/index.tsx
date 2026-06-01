@@ -155,66 +155,60 @@ function Home() {
       </header>
 
       <main className="max-w-6xl mx-auto px-4 sm:px-6 py-8 sm:py-12 space-y-8">
-        {/* Hero header */}
-        <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} className="text-center max-w-3xl mx-auto space-y-3">
-          <div className="inline-flex items-center gap-2 rounded-full glass px-3 py-1 text-xs">
-            <Sparkles className="h-3 w-3 text-primary" />
-            Powered by Lovable AI · Gemini Flash
+        {/* Hero header — hide when viewing generated copy */}
+        {step < 6 && (
+          <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} className="text-center max-w-3xl mx-auto space-y-3">
+            <div className="inline-flex items-center gap-2 rounded-full glass px-3 py-1 text-xs">
+              <Sparkles className="h-3 w-3 text-primary" />
+              Powered by Lovable AI · Gemini Flash
+            </div>
+            <h1 className="text-3xl sm:text-5xl font-bold tracking-tight">
+              Beautiful website copy for your <span className="text-gradient">local business</span>
+            </h1>
+            <p className="text-muted-foreground">
+              Answer a few questions. Get a complete site — hero, about, services, FAQs, SEO — in seconds.
+            </p>
+          </motion.div>
+        )}
+
+        {/* Step indicator — hide when viewing generated copy */}
+        {step < 6 && (
+          <div className="glass-strong rounded-2xl p-5 sm:p-6">
+            <StepIndicator current={step} />
           </div>
-          <h1 className="text-3xl sm:text-5xl font-bold tracking-tight">
-            Beautiful website copy for your <span className="text-gradient">local business</span>
-          </h1>
-          <p className="text-muted-foreground">
-            Answer a few questions. Get a complete site — hero, about, services, FAQs, SEO — in seconds.
-          </p>
-        </motion.div>
+        )}
 
-        {/* Step indicator */}
-        <div className="glass-strong rounded-2xl p-5 sm:p-6">
-          <StepIndicator current={step} />
-        </div>
+        {/* Step card — hide shell when viewing generated copy */}
+        {step < 6 ? (
+          <motion.div
+            key={step}
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.35 }}
+            className="glass-strong rounded-2xl p-5 sm:p-8 space-y-6"
+          >
+            <div>
+              <h2 className="text-2xl font-bold">{STEP_TITLES[step].title}</h2>
+              <p className="text-sm text-muted-foreground mt-1">{STEP_TITLES[step].sub}</p>
+            </div>
 
-        {/* Step card */}
-        <motion.div
-          key={step}
-          initial={{ opacity: 0, y: 16 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.35 }}
-          className="glass-strong rounded-2xl p-5 sm:p-8 space-y-6"
-        >
-          <div>
-            <h2 className="text-2xl font-bold">{STEP_TITLES[step].title}</h2>
-            <p className="text-sm text-muted-foreground mt-1">{STEP_TITLES[step].sub}</p>
-          </div>
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={step}
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.2 }}
+              >
+                {step === 0 && <StepBusiness value={data.business} onChange={(business) => setData({ ...data, business })} />}
+                {step === 1 && <StepServices value={data.services} onChange={(services) => setData({ ...data, services })} />}
+                {step === 2 && <StepUSPs value={data.usps} onChange={(usps) => setData({ ...data, usps })} />}
+                {step === 3 && <StepTones value={data.tones} onChange={(tones) => setData({ ...data, tones })} />}
+                {step === 4 && <StepSections value={data.sections} onChange={(sections) => setData({ ...data, sections })} />}
+                {step === 5 && <StepReview data={data} onEdit={setStep} />}
+              </motion.div>
+            </AnimatePresence>
 
-          <AnimatePresence mode="wait">
-            <motion.div
-              key={step}
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 0.2 }}
-            >
-              {step === 0 && <StepBusiness value={data.business} onChange={(business) => setData({ ...data, business })} />}
-              {step === 1 && <StepServices value={data.services} onChange={(services) => setData({ ...data, services })} />}
-              {step === 2 && <StepUSPs value={data.usps} onChange={(usps) => setData({ ...data, usps })} />}
-              {step === 3 && <StepTones value={data.tones} onChange={(tones) => setData({ ...data, tones })} />}
-              {step === 4 && <StepSections value={data.sections} onChange={(sections) => setData({ ...data, sections })} />}
-              {step === 5 && <StepReview data={data} onEdit={setStep} />}
-              {step === 6 && (
-                <GenerateStep
-                  loading={mutation.isPending}
-                  error={mutation.error?.message ?? null}
-                  copy={copy}
-                  businessName={data.business.name}
-                  onRegenerate={() => mutation.mutate()}
-                  onRetry={() => mutation.mutate()}
-                />
-              )}
-            </motion.div>
-          </AnimatePresence>
-
-          {step < 6 && (
             <div className="flex items-center justify-between gap-3 pt-4 border-t border-border/40">
               <Button variant="ghost" onClick={back} disabled={step === 0}>
                 <ArrowLeft className="h-4 w-4 mr-1" /> Back
@@ -239,11 +233,27 @@ function Home() {
                 </Button>
               </div>
             </div>
-          )}
-        </motion.div>
+          </motion.div>
+        ) : (
+          <motion.div
+            key="output"
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.4 }}
+          >
+            <GenerateStep
+              loading={mutation.isPending}
+              error={mutation.error?.message ?? null}
+              copy={copy}
+              businessName={data.business.name}
+              onRegenerate={() => mutation.mutate()}
+              onRetry={() => mutation.mutate()}
+            />
+          </motion.div>
+        )}
 
-        {/* Prompt engineering panel — visible from step 5 onward */}
-        {step >= 5 && <PromptEngineeringPanel data={data} copy={copy} />}
+        {/* Prompt engineering panel — hide when viewing generated copy */}
+        {step >= 5 && step < 6 && <PromptEngineeringPanel data={data} copy={copy} />}
 
         <footer className="text-center text-xs text-muted-foreground pt-8 pb-4">
           Built with React · TanStack Start · Tailwind · AI SDK · Lovable AI Gateway
