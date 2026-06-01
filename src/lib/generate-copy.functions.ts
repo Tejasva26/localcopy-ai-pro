@@ -1,5 +1,5 @@
 import { createServerFn } from "@tanstack/react-start";
-import { generateText, Output } from "ai";
+import { generateText } from "ai";
 import { z } from "zod";
 import { createLovableAiGatewayProvider } from "./ai-gateway.server";
 
@@ -53,12 +53,25 @@ Rules:
 - Write specific, vivid, conversion-focused copy. No generic filler.
 - Use the chosen tone consistently across all sections.
 - Hero headline: under 12 words, emotionally compelling.
-- Subheadline: 1–2 sentences clarifying value.
-- Generate exactly the requested number of items in each list field.
-- For testimonials: use realistic first names + role, no fake brand names.
+- For testimonials: realistic first names + role, no fake brand names.
 - For FAQs: address real local-customer concerns.
 - SEO keywords: include local intent (e.g., "near me", city name).
-- Quality, SEO, and readability scores must be integers 70–98 reflecting honest assessment.
+- Quality, SEO, and readability scores must be integers 70–98.
+
+# OUTPUT FORMAT
+Return ONLY a single valid JSON object (no markdown, no commentary, no code fences) matching EXACTLY this shape:
+{
+  "hero": { "headline": string, "subheadline": string, "primaryCta": string, "secondaryCta": string },
+  "about": { "overview": string, "mission": string, "trustSignals": string[] (4-6 items) },
+  "services": [ { "name": string, "description": string } ] (at least 3),
+  "whyChooseUs": string[] (5-7 items),
+  "testimonials": [ { "name": string, "role": string, "quote": string } ] (exactly 3),
+  "faqs": [ { "question": string, "answer": string } ] (exactly 5),
+  "contact": string,
+  "finalCta": { "headline": string, "button": string },
+  "seo": { "metaTitle": string, "metaDescription": string, "keywords": string[] (8-12 items) },
+  "scores": { "quality": number, "seo": number, "readability": number }
+}
 `;
 }
 
@@ -72,22 +85,22 @@ const OutputSchema = z.object({
   about: z.object({
     overview: z.string(),
     mission: z.string(),
-    trustSignals: z.array(z.string()).min(3).max(6),
+    trustSignals: z.array(z.string()).min(1),
   }),
-  services: z.array(z.object({ name: z.string(), description: z.string() })).min(1).max(20),
-  whyChooseUs: z.array(z.string()).min(3).max(8),
+  services: z.array(z.object({ name: z.string(), description: z.string() })).min(1),
+  whyChooseUs: z.array(z.string()).min(1),
   testimonials: z.array(z.object({
     name: z.string(),
     role: z.string(),
     quote: z.string(),
-  })).min(2).max(6),
-  faqs: z.array(z.object({ question: z.string(), answer: z.string() })).min(3).max(8),
+  })).min(1),
+  faqs: z.array(z.object({ question: z.string(), answer: z.string() })).min(1),
   contact: z.string(),
   finalCta: z.object({ headline: z.string(), button: z.string() }),
   seo: z.object({
     metaTitle: z.string(),
     metaDescription: z.string(),
-    keywords: z.array(z.string()).min(3).max(20),
+    keywords: z.array(z.string()).min(1),
   }),
   scores: z.object({
     quality: z.number().int().min(0).max(100),
@@ -95,6 +108,24 @@ const OutputSchema = z.object({
     readability: z.number().int().min(0).max(100),
   }),
 });
+
+function extractJson(raw: string): unknown {
+  let cleaned = raw.replace(/```json\s*/gi, "").replace(/```\s*/g, "").trim();
+  const start = cleaned.search(/[{[]/);
+  const isArray = start !== -1 && cleaned[start] === "[";
+  const end = cleaned.lastIndexOf(isArray ? "]" : "}");
+  if (start === -1 || end === -1) throw new Error("No JSON found in model response");
+  cleaned = cleaned.substring(start, end + 1);
+  try {
+    return JSON.parse(cleaned);
+  } catch {
+    cleaned = cleaned
+      .replace(/,\s*}/g, "}")
+      .replace(/,\s*]/g, "]")
+      .replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, "");
+    return JSON.parse(cleaned);
+  }
+}
 
 export const generateCopy = createServerFn({ method: "POST" })
   .inputValidator((input: unknown) => WizardSchema.parse(input))
@@ -104,11 +135,26 @@ export const generateCopy = createServerFn({ method: "POST" })
     const gateway = createLovableAiGatewayProvider(key);
     const prompt = buildPrompt(data);
 
-    const { output } = await generateText({
-      model: gateway("google/gemini-3-flash-preview"),
-      output: Output.object({ schema: OutputSchema }),
+    const { text } = await generateText({
+      model: gateway("google/gemini-2.5-flash"),
       prompt,
     });
 
-    return { ...output, promptUsed: prompt };
+    let parsed: unknown;
+    try {
+      parsed = extractJson(text);
+    } catch (e) {
+      throw new Error(
+        `AI returned malformed JSON. ${e instanceof Error ? e.message : ""}`,
+      );
+    }
+
+    const result = OutputSchema.safeParse(parsed);
+    if (!result.success) {
+      throw new Error(
+        `AI output failed validation: ${result.error.issues.slice(0, 3).map((i) => `${i.path.join(".")}: ${i.message}`).join("; ")}`,
+      );
+    }
+
+    return { ...result.data, promptUsed: prompt };
   });
