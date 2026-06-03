@@ -1,7 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { generateText } from "ai";
 import { z } from "zod";
-import { createLovableAiGatewayProvider } from "./ai-gateway.server";
+import { createGoogleGenerativeAI } from "@ai-sdk/google";
 
 const WizardSchema = z.object({
   business: z.object({
