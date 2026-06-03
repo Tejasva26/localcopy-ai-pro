@@ -1,7 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { generateText } from "ai";
 import { z } from "zod";
-import { createLovableAiGatewayProvider } from "./ai-gateway.server";
+import { createGoogleGenerativeAI } from "@ai-sdk/google";
 
 const WizardSchema = z.object({
   business: z.object({
@@ -130,13 +130,13 @@ function extractJson(raw: string): unknown {
 export const generateCopy = createServerFn({ method: "POST" })
   .inputValidator((input: unknown) => WizardSchema.parse(input))
   .handler(async ({ data }) => {
-    const key = process.env.LOVABLE_API_KEY;
-    if (!key) throw new Error("Missing LOVABLE_API_KEY");
-    const gateway = createLovableAiGatewayProvider(key);
+    const key = process.env.GEMINI_API_KEY;
+    if (!key) throw new Error("Missing GEMINI_API_KEY. Get a free key at https://aistudio.google.com/apikey");
+    const google = createGoogleGenerativeAI({ apiKey: key });
     const prompt = buildPrompt(data);
 
     const { text } = await generateText({
-      model: gateway("google/gemini-2.5-flash"),
+      model: google("gemini-2.5-flash"),
       prompt,
     });
 
