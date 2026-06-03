@@ -148,10 +148,26 @@ export const generateCopy = createServerFn({ method: "POST" })
         schema: OutputSchema,
         prompt,
       });
-      return { ...object, promptUsed: prompt };
+
+      // Enforce strict input fidelity: services must match user input exactly.
+      const enforcedServices = data.services.length > 0
+        ? data.services.map((input, i) => {
+            const aiMatch = object.services[i];
+            return {
+              name: input.name,
+              description: aiMatch?.description?.trim()
+                || input.description
+                || input.benefit
+                || `Professional ${input.name.toLowerCase()} tailored to your needs.`,
+            };
+          })
+        : [];
+
+      return { ...object, services: enforcedServices, promptUsed: prompt };
     } catch (e) {
       throw new Error(
         `AI generation failed. ${e instanceof Error ? e.message : ""}`,
       );
     }
+
   });
