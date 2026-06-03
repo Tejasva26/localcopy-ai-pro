@@ -26,6 +26,7 @@ const WizardSchema = z.object({
 function buildPrompt(d: z.infer<typeof WizardSchema>) {
   const services = d.services.map((s, i) => `${i + 1}. ${s.name} — ${s.description} (Benefit: ${s.benefit})`).join("\n");
   const usps = d.usps.map((u, i) => `${i + 1}. ${u.text}`).join("\n");
+  const serviceNames = d.services.map((s) => s.name).filter(Boolean);
   return `You are an expert conversion copywriter for local businesses.
 Generate complete, high-converting website copy for the business below.
 
@@ -37,11 +38,11 @@ Generate complete, high-converting website copy for the business below.
 - Target audience: ${d.business.targetAudience || "general local customers"}
 - Description: ${d.business.description || "N/A"}
 
-# SERVICES
-${services || "(none provided — infer reasonable defaults from the category)"}
+# SERVICES (use ONLY these — do NOT invent, add, rename, or remove any)
+${services || "(none provided)"}
 
-# UNIQUE SELLING PROPOSITIONS
-${usps || "(infer credible ones from the business context)"}
+# UNIQUE SELLING PROPOSITIONS (use ONLY these — do NOT invent extras)
+${usps || "(none provided)"}
 
 # TONE & STYLE
 ${d.tones.join(", ") || "Professional, Friendly"}
@@ -49,13 +50,19 @@ ${d.tones.join(", ") || "Professional, Friendly"}
 # REQUIRED SECTIONS
 ${d.sections.join(", ")}
 
-Rules:
-- Write specific, vivid, conversion-focused copy. No generic filler.
-- Use the chosen tone consistently across all sections.
+STRICT INPUT FIDELITY (MUST FOLLOW):
+- The output "services" array MUST contain EXACTLY ${d.services.length} item(s), in the SAME ORDER as listed above, with the EXACT same "name" field for each. Only rewrite/expand the "description". If 0 services were provided, return an empty services array.
+${serviceNames.length ? `- Allowed service names (exact, in order): ${serviceNames.map((n) => JSON.stringify(n)).join(", ")}` : ""}
+- "trustSignals", "whyChooseUs", and About copy must be derived from the USPs and business description above. Do NOT fabricate awards, certifications, customer counts, ratings, or years the user did not provide.
+- Testimonials may use realistic first names + roles, but must reference ONLY the services/USPs listed above. Never mention services or features not in the inputs.
+- Do NOT mention any service, product, or feature not explicitly listed in SERVICES or USPs.
+
+Other rules:
+- Specific, vivid, conversion-focused copy. No generic filler.
+- Use the chosen tone consistently.
 - Hero headline: under 12 words, emotionally compelling.
-- For testimonials: realistic first names + role, no fake brand names.
-- For FAQs: address real local-customer concerns.
-- SEO keywords: include local intent (e.g., "near me", city name).
+- FAQs: real local-customer concerns relevant to the listed services.
+- SEO keywords: include local intent (e.g., "near me", city name) and the listed services.
 - Quality, SEO, and readability scores must be integers 70–98.
 
 # OUTPUT FORMAT
@@ -63,7 +70,7 @@ Return ONLY a single valid JSON object (no markdown, no commentary, no code fenc
 {
   "hero": { "headline": string, "subheadline": string, "primaryCta": string, "secondaryCta": string },
   "about": { "overview": string, "mission": string, "trustSignals": string[] (4-6 items) },
-  "services": [ { "name": string, "description": string } ] (at least 3),
+  "services": [ { "name": string, "description": string } ] (exactly ${d.services.length}),
   "whyChooseUs": string[] (5-7 items),
   "testimonials": [ { "name": string, "role": string, "quote": string } ] (exactly 3),
   "faqs": [ { "question": string, "answer": string } ] (exactly 5),
