@@ -135,26 +135,16 @@ export const generateCopy = createServerFn({ method: "POST" })
     const google = createGoogleGenerativeAI({ apiKey: key });
     const prompt = buildPrompt(data);
 
-    const { text } = await generateText({
-      model: google("gemini-2.5-flash"),
-      prompt,
-    });
-
-    let parsed: unknown;
     try {
-      parsed = extractJson(text);
+      const { object } = await generateObject({
+        model: google("gemini-2.5-flash"),
+        schema: OutputSchema,
+        prompt,
+      });
+      return { ...object, promptUsed: prompt };
     } catch (e) {
       throw new Error(
-        `AI returned malformed JSON. ${e instanceof Error ? e.message : ""}`,
+        `AI generation failed. ${e instanceof Error ? e.message : ""}`,
       );
     }
-
-    const result = OutputSchema.safeParse(parsed);
-    if (!result.success) {
-      throw new Error(
-        `AI output failed validation: ${result.error.issues.slice(0, 3).map((i) => `${i.path.join(".")}: ${i.message}`).join("; ")}`,
-      );
-    }
-
-    return { ...result.data, promptUsed: prompt };
   });
