@@ -94,7 +94,7 @@ const OutputSchema = z.object({
     mission: z.string(),
     trustSignals: z.array(z.string()).min(1),
   }),
-  services: z.array(z.object({ name: z.string(), description: z.string() })).min(1),
+  services: z.array(z.object({ name: z.string(), description: z.string() })).min(0),
   whyChooseUs: z.array(z.string()).min(1),
   testimonials: z.array(z.object({
     name: z.string(),
