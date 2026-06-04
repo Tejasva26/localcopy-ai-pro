@@ -1,6 +1,5 @@
 {
-  "buildCommand": "DEPLOY_TARGET=vercel bun run build",
+  "buildCommand": "DEPLOY_TARGET=vercel bun run build && ls -la dist/",
   "installCommand": "bun install",
-  "framework": null,
-  "outputDirectory": ".vercel/output"
+  "framework": null
 }
