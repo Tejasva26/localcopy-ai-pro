@@ -1,5 +1,1 @@
-{
-  "buildCommand": "DEPLOY_TARGET=vercel bun run build",
-  "installCommand": "bun install",
-  "framework": null
-}
+
